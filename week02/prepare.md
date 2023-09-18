@@ -5,7 +5,7 @@
 ## Overview
 
 Last week, we learned to create threads that are considered "stand alone" or independent -- meaning that when that thread is running, it doesn't effect other threads. Also, there was no communication between threads.  This week, we are learning about the communication tools that allow threads to work together.
-
+    
 ## States of a Thread
 
 The operating system (Windows, Mac, Linux, etc.) is in control of managing threads.  The following diagram outlines the different states of a thread.

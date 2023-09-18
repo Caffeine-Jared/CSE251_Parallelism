@@ -121,6 +121,42 @@ def draw_rectangles(tur):
         for y in range(-300, 350, 200):
             draw_rectangle(tur, x-10, y+5, 20, 15)
 
+# copy
+
+def draw_squares_threaded(tur,lock):
+    lock.acquire()
+    """Draw a group of squares"""
+    for x in range(-300, 350, 200):
+        for y in range(-300, 350, 200):
+            draw_square(tur, x - 50, y + 50, 100)
+    lock.release()
+
+
+def draw_circles_threaded(tur,lock):
+    lock.acquire()
+    """Draw a group of circles"""
+    for x in range(-300, 350, 200):
+        for y in range(-300, 350, 200):
+            draw_circle(tur, x, y-2, 50)
+    lock.release()
+
+
+def draw_triangles_threaded(tur,lock):
+    lock.acquire()
+    """Draw a group of triangles"""
+    for x in range(-300, 350, 200):
+        for y in range(-300, 350, 200):
+            draw_triangle(tur, x-30, y-30+10, 60)
+    lock.release()
+
+
+def draw_rectangles_threaded(tur,lock):
+    lock.acquire()
+    """Draw a group of Rectangles"""
+    for x in range(-300, 350, 200):
+        for y in range(-300, 350, 200):
+            draw_rectangle(tur, x-10, y+5, 20, 15)
+    lock.release()
 
 def run_no_threads(tur, log, main_turtle):
     """Draw different shapes without using threads"""
@@ -145,6 +181,7 @@ def run_no_threads(tur, log, main_turtle):
     draw_circles(tur)
     draw_triangles(tur)
     draw_rectangles(tur)
+    # draw_threaded_shape(tur,lock) this is the way - copy paste all the functions and add in the lock into these functions
 
     log.step_timer('All drawing commands have been created')
 
@@ -171,6 +208,31 @@ def run_with_threads(tur, log, main_turtle):
     # TODO - Start add your code here.
     # You need to use 4 threads where each thread concurrently drawing one type of shape.
     # You are free to change any functions in this code except main()
+    
+    # threads_num = 4
+    # threads_arr = []
+    # for x in threads_num:
+    
+    lock = threading.Lock()
+    
+    t1 = threading.Thread(target=draw_circles_threaded, args=(tur,lock))
+    
+    t2 = threading.Thread(target=draw_rectangles_threaded, args=(tur,lock))
+    
+    t3 = threading.Thread(target=draw_squares_threaded, args=(tur,lock))
+    
+    t4 = threading.Thread(target=draw_triangles_threaded,args=(tur,lock))
+
+    t1.start()
+    t2.start()
+    t3.start()
+    t4.start()
+
+    t1.join()
+    t2.join()
+    t3.join()
+    t4.join()
+    
 
     log.step_timer('All drawing commands have been created')
 
@@ -212,7 +274,6 @@ def main():
 
     # Waiting for user to close window
     turtle.done()
-
 
 if __name__ == "__main__":
     main()
