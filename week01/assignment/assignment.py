@@ -33,7 +33,7 @@ from cse251turtle import *
 from cse251 import *
 
 # No global variables.
-
+lock = threading.Lock()
 def draw_square(tur, x, y, side, color='black'):
     """Draw Square"""
     tur.move(x, y)
@@ -177,12 +177,14 @@ def run_no_threads(tur, log, main_turtle):
     log.start_timer('Start Drawing No Threads')
     tur.move(0, 0)
 
-    draw_squares(tur)
-    draw_circles(tur)
-    draw_triangles(tur)
-    draw_rectangles(tur)
-    # draw_threaded_shape(tur,lock) this is the way - copy paste all the functions and add in the lock into these functions
-
+    # draw_squares(tur)
+    # draw_circles(tur)
+    # draw_triangles(tur)
+    # draw_rectangles(tur)
+    draw_circles_threaded(tur,lock) # this is the way - copy paste all the functions and add in the lock into these functions
+    draw_rectangles_threaded(tur,lock)
+    draw_squares_threaded(tur,lock)
+    draw_triangles(tur,lock)
     log.step_timer('All drawing commands have been created')
 
     tur.move(0, 0)
@@ -208,34 +210,25 @@ def run_with_threads(tur, log, main_turtle):
     # TODO - Start add your code here.
     # You need to use 4 threads where each thread concurrently drawing one type of shape.
     # You are free to change any functions in this code except main()
-    
-    # threads_num = 4
-    # threads_arr = []
-    # for x in threads_num:
-    
-    lock = threading.Lock()
-    
-    t1 = threading.Thread(target=draw_circles_threaded, args=(tur,lock))
-    
-    t2 = threading.Thread(target=draw_rectangles_threaded, args=(tur,lock))
-    
-    t3 = threading.Thread(target=draw_squares_threaded, args=(tur,lock))
-    
-    t4 = threading.Thread(target=draw_triangles_threaded,args=(tur,lock))
 
-    t1.start()
-    t2.start()
-    t3.start()
-    t4.start()
-
-    t1.join()
-    t2.join()
-    t3.join()
-    t4.join()
+    # Create threads
+    thread_funcs = [
+        draw_circles_threaded,
+        draw_rectangles_threaded,
+        draw_squares_threaded,
+        draw_triangles_threaded
+    ]
+    threads = [threading.Thread(target=func, args=(tur, lock)) for func in thread_funcs]
     
+    # Start threads
+    for t in threads:
+        t.start()
+        
+    # Wait for all threads to complete
+    for t in threads:
+        t.join()
 
     log.step_timer('All drawing commands have been created')
-
     log.write(f'Number of Drawing Commands: {tur.get_command_count()}')
 
     # Play the drawing commands that were created
