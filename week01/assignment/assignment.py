@@ -13,7 +13,7 @@ There is a Python class called cse251Turtle that is used to hold the drawing
 commands that are created by the program.  This is required because threads can
 not draw to the screen - only the main thread can do this.
 
-Instructions:
+Instructions:   
 
 - Find the "TODO" comment below and add your code that will use threads.
 - You are not allowed to use any other Python modules/packages than the packages
@@ -51,7 +51,7 @@ def draw_circle(tur, x, y, radius, color='red'):
     """Draw Circle"""
     steps = 10
     circumference = 2 * math.pi * radius
-
+        
     # Need to adjust starting position so that (x, y) is the center
     x1 = x - (circumference // steps) // 2
     y1 = y
