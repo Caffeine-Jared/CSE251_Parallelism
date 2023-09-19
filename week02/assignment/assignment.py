@@ -54,16 +54,26 @@ call_count = 0
 
 
 # TODO Add your threaded class definition here
-
+t1 = threading.Thread()
+t2 = threading.Thread()
+t3 = threading.Thread()
+t4 = threading.Thread()
+t5 = threading.Thread()
+t6 = threading.Thread()
 
 # TODO Add any functions you need here
-
+def retrieve_info(url):
+     api_call = TOP_API_URL+url+f'/{x}/'
+     response = requests.get(api_call)
+     
+     return response.json()
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer('Starting to retrieve data from the server')
 
     # TODO Retrieve Top API urls
+
 
     # TODO Retireve Details on film 6
 
