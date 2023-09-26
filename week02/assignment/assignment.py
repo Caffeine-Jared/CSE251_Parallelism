@@ -81,7 +81,7 @@ def retrieve_film_details(api_urls):
     vehicles_threads = [kill_me_i_hate_threading(url) for url in film["vehicles"]]
     species_threads = [kill_me_i_hate_threading(url) for url in film["species"]]
 
-    for thread in chars_threads + planets_threads + starships_threads + vehicles_threads + species_threads: # each of these are for loops
+    for thread in chars_threads + planets_threads + starships_threads + vehicles_threads + species_threads: 
         thread.start()
 
     for thread in chars_threads + planets_threads + starships_threads + vehicles_threads + species_threads:
