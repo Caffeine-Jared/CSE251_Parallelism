@@ -125,13 +125,14 @@ class Dealer(threading.Thread):
         while True:
             # TODO Add your code here
             self.car_semaphore.acquire()
+            
             with self.lock:
                 if self.car_queue.size() == 0:
                     break
                 car = self.car_queue.get()
                 self.queue_stats[self.car_queue.size()] += 1
             self.empty_semaphore.release()
-            time.sleep(random.random() / (SLEEP_REDUCE_FACTOR))
+
             """
             take the car from the queue
             signal the factory that there is an empty slot in the queue
@@ -162,7 +163,7 @@ def main():
 
     # TODO create your one factory
     factory = Factory(car_queue, car_semaphore, empty_semaphore, lock)
-    
+
     # TODO create your one dealership
     dealer = Dealer(car_queue, car_semaphore, empty_semaphore, lock, queue_stats)
     log.start_timer()
