@@ -198,7 +198,7 @@ class Wrapper(mp.Process):
                 gift = self.recv_pipe.recv()
                 if gift is None:
                     break
-                timestamp = datetime.now()
+                timestamp = datetime.now().time()
                 file.write(f"Created - {timestamp}: {str(gift)}\n")
                 time.sleep(self.delay)
 
