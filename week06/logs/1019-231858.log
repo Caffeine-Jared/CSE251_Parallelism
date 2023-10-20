@@ -1,0 +1,11 @@
+23:18:58| Marble count     = 1000
+23:18:58| Marble delay     = 0.01
+23:18:58| Marbles in a bag = 7
+23:18:58| Bagger delay     = 0.05
+23:18:58| Assembler delay  = 0.05
+23:18:58| Wrapper delay    = 0.05
+23:18:58| Create the processes
+23:18:58| Starting the processes
+23:18:58| Waiting for processes to finish
+23:19:09| Contents of C:/Users/jared/Documents/GitHub/CSE251_Parallelism/week06/assignment/boxes.txt
+23:19:09| Number of gifts created: 0
