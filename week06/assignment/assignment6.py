@@ -16,10 +16,11 @@ import datetime
 
 # Include cse 251 common Python files - Don't change
 from cse251 import *
-
-CONTROL_FILENAME = 'C:/Users/jared/Documents/GitHub/CSE251_Parallelism/week06/assignment/settings.txt'
-BOXES_FILENAME   = 'C:/Users/jared/Documents/GitHub/CSE251_Parallelism/week06/assignment/boxes.txt'
-
+# Filesystems are annoying - i changed it to this so it can work, but remembered I can cd into the working dir
+# CONTROL_FILENAME = 'C:/Users/jared/Documents/GitHub/CSE251_Parallelism/week06/assignment/settings.txt'
+# BOXES_FILENAME   = 'C:/Users/jared/Documents/GitHub/CSE251_Parallelism/week06/assignment/boxes.txt'
+CONTROL_FILENAME = './settings.txt'
+BOXES_FILENAME   = './boxes.txt'
 # Settings consts
 MARBLE_COUNT = 'marble-count'
 CREATOR_DELAY = 'creator-delay'
@@ -100,7 +101,6 @@ class Marble_Creator(mp.Process):
             self.pipe.send(marble)
             time.sleep(self.delay)
 
-        # Inform the bagger that marble creation is done
         self.pipe.send(None)
 
 
@@ -127,20 +127,20 @@ class Bagger(mp.Process):
             bag = Bag()
             for _ in range(self.bag_count):
                 marble = self.recv_pipe.recv()
-                if marble is None:  # If no more marbles are coming, stop bagging
+                if marble is None:
                     break
                 bag.add(marble)
 
-            # If the bag has any marbles, even if not full, send it
+            
             if bag.get_size() > 0:
                 self.send_pipe.send(bag)
                 time.sleep(self.delay)
 
-            # If we've received the sentinel value, stop the bagging process
+            
             if marble is None:
                 break
 
-        # Inform the assembler that there are no more bags coming
+        
         self.send_pipe.send(None)
 
 
@@ -234,7 +234,7 @@ def main():
     log.write(f'Assembler delay  = {settings[ASSEMBLER_DELAY]}')
     log.write(f'Wrapper delay    = {settings[WRAPPER_DELAY]}')
 
-    # If boxes.txt exists, delete it, then create an empty one.
+    
     if os.path.exists(BOXES_FILENAME):
         os.remove(BOXES_FILENAME)
     open(BOXES_FILENAME, 'w').close()
@@ -245,7 +245,7 @@ def main():
     assembler_to_wrapper, wrapper_from_assembler = mp.Pipe()
 
     # TODO create variable to be used to count the number of gifts
-    # The boxes file handling has been adjusted to ensure it's present when needed.
+    # The boxes file handling has been adjusted to ensure it's present when needed
 
     log.write('Create the processes')
 
@@ -271,7 +271,6 @@ def main():
 
     display_final_boxes(BOXES_FILENAME, log)
     
-    # Count the gifts after all processes finish.
     with open(BOXES_FILENAME, 'r') as f:
         gift_count = sum(1 for _ in f)
     # TODO Log the number of gifts created.
