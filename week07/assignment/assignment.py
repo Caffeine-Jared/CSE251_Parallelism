@@ -12,6 +12,11 @@ TODO
 Add your comments here on the pool sizes that you used for your assignment and
 why they were the best choices.
 
+pool_prime - this was probably the more cpu intensive task, and i decided to throw as much cpu power that i had at it, which was 12 cores
+pool_word - i thought that maybe by inceasing the pool size, any I/O bottlenecks might not be an issue
+pool_upper - just flexing w/ my cpu tbh
+pool_sum - having the higer number of processes helped this get done faster
+pool_name - this was io bound, and having more processes allowed it to get done faster
 
 """
 
@@ -62,7 +67,11 @@ def task_prime(value):
             - or -
         {value} is not prime
     """
-    pass
+    if is_prime(value):
+        return f'{value:,} is prime'
+    else:
+        return f'{value:,} is not prime'
+
 
 def task_word(word):
     """
@@ -72,21 +81,28 @@ def task_word(word):
             - or -
         {word} not found *****
     """
-    pass
+    with open('words.txt') as f:
+        words = f.read().splitlines()
+    if word in words:
+        return f'{word} Found'
+    else:
+        return f'{word} not found *****'
 
 def task_upper(text):
     """
     Add the following to the global list:
         {text} ==>  uppercase version of {text}
     """
-    pass
+    return f'{text} ==> {text.upper()}'
 
 def task_sum(start_value, end_value):
     """
     Add the following to the global list:
         sum of {start_value:,} to {end_value:,} = {total:,}
     """
-    pass
+    total = sum(range(start_value, end_value + 1))
+    return f'sum of {start_value:,} to {end_value:,} = {total:,}'
+
 
 def task_name(url):
     """
@@ -96,14 +112,39 @@ def task_name(url):
             - or -
         {url} had an error receiving the information
     """
-    pass
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        name = response.json().get('name')
+        return f'{url} has name {name}'
+    except requests.RequestException as e:
+        return f'{url} had an error receiving the information: {e}'
 
+def callback_prime(result):
+    result_primes.append(result)
 
-def main():
+def callback_word(result):
+    result_words.append(result)
+
+def callback_upper(result):
+    result_upper.append(result)
+
+def callback_sum(result):
+    result_sums.append(result)
+
+def callback_name(result):
+    result_names.append(result)
+
+def main(result_primes, result_words, result_upper, result_sums, result_names):
     log = Log(show_terminal=True)
     log.start_timer()
 
-    # TODO Create process pools
+# TODO Create process pools
+    pool_prime = mp.Pool(12)
+    pool_word = mp.Pool(8)
+    pool_upper = mp.Pool(4)
+    pool_sum = mp.Pool(8)
+    pool_name = mp.Pool(12)
 
     # TODO you can change the following
     # TODO start and wait pools
@@ -111,25 +152,33 @@ def main():
     count = 0
     task_files = glob.glob("*.task")
     for filename in task_files:
-        # print()
-        # print(filename)
         task = load_json_file(filename)
-        print(task)
         count += 1
         task_type = task['task']
         if task_type == TYPE_PRIME:
-            task_prime(task['value'])
+            pool_prime.apply_async(task_prime, args=(task['value'],), callback=callback_prime)
         elif task_type == TYPE_WORD:
-            task_word(task['word'])
+            pool_word.apply_async(task_word, args=(task['word'],), callback=callback_word)
         elif task_type == TYPE_UPPER:
-            task_upper(task['text'])
+            pool_upper.apply_async(task_upper, args=(task['text'],), callback=callback_upper)
         elif task_type == TYPE_SUM:
-            task_sum(task['start'], task['end'])
+            pool_sum.apply_async(task_sum, args=(task['start'], task['end']), callback=callback_sum)
         elif task_type == TYPE_NAME:
-            task_name(task['url'])
+            pool_name.apply_async(task_name, args=(task['url'],), callback=callback_name)
         else:
             log.write(f'Error: unknown task type {task_type}')
 
+    pool_prime.close()
+    pool_word.close()
+    pool_upper.close()
+    pool_sum.close()
+    pool_name.close()
+
+    pool_prime.join()
+    pool_word.join()
+    pool_upper.join()
+    pool_sum.join()
+    pool_name.join()
 
 
     # Do not change the following code (to the end of the main function)
@@ -166,4 +215,11 @@ def main():
     log.stop_timer(f'Finished processes {count} tasks')
 
 if __name__ == '__main__':
-    main()
+    with mp.Manager() as manager:
+        result_primes = manager.list()
+        result_words = manager.list()
+        result_upper = manager.list()
+        result_sums = manager.list()
+        result_names = manager.list()
+
+        main(result_primes, result_words, result_upper, result_sums, result_names)
