@@ -30,11 +30,31 @@ speed = SLOW_SPEED
 
 def solve_path(maze):
     """ Solve the maze and return the path found between the start and end positions.  
-        The path is a list of positions, (x, y) """
-        
-    # TODO start add code here
-    path = []
-    return path
+        The path is a list of positions, (row, col) """
+
+    def dfs(position, visited):
+        row, col = position
+        print(f"Visiting: {position}")
+
+        if maze.at_end(row, col):
+            print("Reached end!")
+            return [position]
+
+        maze.move(row, col, COLOR)
+
+        for move in maze.get_possible_moves(row, col):
+            if move not in visited:
+                visited.add(move)
+                path = dfs(move, visited)
+                if path:
+                    return [position] + path
+
+        maze.restore(row, col)
+        return []
+
+    start_pos = maze.get_start_pos()
+    visited = set([start_pos])
+    return dfs(start_pos, visited)
 
 
 def get_path(log, filename):

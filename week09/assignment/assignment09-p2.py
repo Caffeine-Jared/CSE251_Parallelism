@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson Week: 09
 File: assignment09-p2.py 
-Author: <Add name here>
+Author: Jared Linares
 
 Purpose: Part 2 of assignment 09, finding the end position in the maze
 
@@ -17,12 +17,12 @@ However, once you have completed this program, describe how you could
 change the program to display the found path to the exit position.
 
 What would be your strategy?  
-
-<Answer here>
+The solve_find_end function basically sets up a bunch of threads (but not too many) to zip through the maze at the same time. 
+Each thread kicks off from the same spot and digs into the maze, stacking up moves and trying different paths.
 
 Why would it work?
-
-<Answer here>
+This method is pretty cool because it gets the job done faster by using teamwork (aka parallelism), but it's smart enough not to go overboard with too many threads. 
+Plus, there's a neat trick with a shared 'stop' flag and a lock thingy that tells all the threads to chill once one of them finds the end.
 
 """
 import math
@@ -72,15 +72,51 @@ def get_color():
     color = COLORS[current_color_index]
     current_color_index += 1
     return color
+# sometimes i question my sanity
 
 def solve_find_end(maze):
-    """ finds the end position using threads.  Nothing is returned """
-    # When one of the threads finds the end position, stop all of them
-    global stop
+    global stop, thread_count
     stop = False
+    thread_count = 0
+    max_threads = 24
+    successful_thread_color = [None]
+    thread_lock = threading.Lock()
 
+    def thread_search(start_pos, color):
+        global stop
+        stack = [start_pos]
 
-    pass
+        while stack and not stop:
+            position = stack.pop()
+            row, col = position
+
+            if maze.at_end(row, col):
+                with thread_lock:
+                    if not stop:
+                        stop = True
+                        successful_thread_color[0] = color
+                return
+
+            if maze.can_move_here(row, col):
+                current_color = successful_thread_color[0] if stop else color
+                maze.move(row, col, current_color)
+                stack.extend(maze.get_possible_moves(row, col))
+
+            if not stop:
+                maze.restore(row, col)
+
+    threads = []
+    start_pos = maze.get_start_pos()
+
+    for _ in range(max_threads):
+        color = get_color()
+        thread = threading.Thread(target=thread_search, args=(start_pos, color))
+        threads.append(thread)
+        thread_count += 1
+        thread.start()
+
+    for thread in threads:
+        thread.join()
 
 
 def find_end(log, filename, delay):
