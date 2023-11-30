@@ -56,7 +56,6 @@ Instructions:
 Add any comments for me:
 
 """
-
 import random
 from multiprocessing.managers import SharedMemoryManager
 import multiprocessing as mp
@@ -65,79 +64,48 @@ BUFFER_SIZE = 10
 READERS = 2
 WRITERS = 2
 SPECIAL_END_VALUE = -1
-def writer(shared_list, buffer_semaphore, access_lock, items_to_send, writer_id):
-    print(f"Writer {writer_id} started")
-    for item in range(1, items_to_send + 1):
-        buffer_semaphore.acquire()
+
+def writer(shared_list, empty_semaphore, filled_semaphore, access_lock, items_to_send, writer_id):
+    current_item = 1
+    while current_item <= items_to_send:
+        empty_semaphore.acquire()
         with access_lock:
-            write_pos = shared_list[BUFFER_SIZE] % BUFFER_SIZE
-            shared_list[write_pos] = item
-            shared_list[BUFFER_SIZE] = (shared_list[BUFFER_SIZE] + 1) % BUFFER_SIZE
-        buffer_semaphore.release()
-        if item % 1000 == 0:  # Print status every 1000 items
-            print(f"Writer {writer_id}: Sent {item} items")
+            tail = shared_list[BUFFER_SIZE + 2]
+            shared_list[tail] = current_item
+            shared_list[BUFFER_SIZE + 2] = (tail + 1) % BUFFER_SIZE
+            current_item += 1
+        filled_semaphore.release()
 
     for _ in range(READERS):
-        buffer_semaphore.acquire()
+        empty_semaphore.acquire()
         with access_lock:
-            write_pos = shared_list[BUFFER_SIZE] % BUFFER_SIZE
-            shared_list[write_pos] = SPECIAL_END_VALUE
-            shared_list[BUFFER_SIZE] = (shared_list[BUFFER_SIZE] + 1) % BUFFER_SIZE
-        buffer_semaphore.release()
-    print(f"Writer {writer_id} finished")
+            tail = shared_list[BUFFER_SIZE + 2]
+            shared_list[tail] = SPECIAL_END_VALUE
+            shared_list[BUFFER_SIZE + 2] = (tail + 1) % BUFFER_SIZE
+        filled_semaphore.release()
 
-def reader(shared_list, buffer_semaphore, access_lock, reader_id):
-    print(f"Reader {reader_id} started")
-    local_count = 0
+def reader(shared_list, empty_semaphore, filled_semaphore, access_lock, reader_id, read_count_index):
+    read_count = 0
+    end_count = 0
     while True:
-        buffer_semaphore.acquire()
+        filled_semaphore.acquire()
         with access_lock:
-            read_pos = shared_list[BUFFER_SIZE + 1] % BUFFER_SIZE
-            item = shared_list[read_pos]
-            shared_list[BUFFER_SIZE + 1] = (shared_list[BUFFER_SIZE + 1] + 1) % BUFFER_SIZE
-
+            head = shared_list[BUFFER_SIZE + 1]
+            item = shared_list[head]
+            shared_list[BUFFER_SIZE + 1] = (head + 1) % BUFFER_SIZE
             if item == SPECIAL_END_VALUE:
-                buffer_semaphore.release()
-                break
+                end_count += 1
+                if end_count == WRITERS:
+                    shared_list[read_count_index] = read_count
+                    break
+                continue
+            print(item, end=', ', flush=True)
+            read_count += 1
+        empty_semaphore.release()
 
-            local_count += 1
-
-        buffer_semaphore.release()
-        if local_count % 1000 == 0:  # Print status every 1000 items
-            print(f"Reader {reader_id}: Read {local_count} items")
-
-    with access_lock:
-        shared_list[BUFFER_SIZE + 3] += local_count
-    print(f"Reader {reader_id} finished, read {local_count} items")
-
-def reader(shared_list, buffer_semaphore, access_lock, reader_id):
-    print(f"Reader {reader_id} started")
-    local_count = 0
-    while True:
-        buffer_semaphore.acquire()
-        with access_lock:
-            read_pos = shared_list[BUFFER_SIZE + 1] % BUFFER_SIZE
-            item = shared_list[read_pos]
-            shared_list[BUFFER_SIZE + 1] = (shared_list[BUFFER_SIZE + 1] + 1) % BUFFER_SIZE
-
-            if item == SPECIAL_END_VALUE:
-                buffer_semaphore.release()
-                break
-
-            local_count += 1
-
-        buffer_semaphore.release()
-        if local_count % 1000 == 0:  # Print status every 1000 items
-            print(f"Reader {reader_id}: Read {local_count} items")
-
-    with access_lock:
-        shared_list[BUFFER_SIZE + 3] += local_count
-    print(f"Reader {reader_id} finished, read {local_count} items")
 
 
 def main():
-
-    # This is the number of values that the writer will send to the reader
     items_to_send = random.randint(1000, 10000)
 
     smm = SharedMemoryManager()
@@ -153,38 +121,39 @@ def main():
     #        You can add another value to the sharedable list to keep
     #        track of the number of values received by the readers.
     #        (ie., [0] * (BUFFER_SIZE + 4))
-    shared_list = smm.ShareableList([0] * (BUFFER_SIZE + 4))
+    read_count_indices = [BUFFER_SIZE + 4 + i for i in range(READERS)]
+    shared_list = smm.ShareableList([0] * (BUFFER_SIZE + 4 + READERS))
 
     # TODO - Create any lock(s) or semaphore(s) that you feel you need
-    buffer_semaphore = mp.Semaphore(BUFFER_SIZE)
+    empty_semaphore = mp.Semaphore(BUFFER_SIZE)
+    filled_semaphore = mp.Semaphore(0)
     access_lock = mp.Lock()
 
     # TODO - create reader and writer processes
-    writers = [mp.Process(target=writer, args=(shared_list, buffer_semaphore, access_lock, items_to_send, i)) for i in range(WRITERS)]
-    readers = [mp.Process(target=reader, args=(shared_list, buffer_semaphore, access_lock, i)) for i in range(READERS)]
+    writers = [mp.Process(target=writer, args=(shared_list, empty_semaphore, filled_semaphore, access_lock, items_to_send, i)) for i in range(WRITERS)]
+    readers = [mp.Process(target=reader, args=(shared_list, empty_semaphore, filled_semaphore, access_lock, i, read_count_indices[i])) for i in range(READERS)]
 
     # TODO - Start the processes and wait for them to finish
     for w in writers:
         w.start()
-
     for r in readers:
         r.start()
 
     for w in writers:
         w.join()
-
     for r in readers:
         r.join()
+
     print(f'{items_to_send} values sent')
 
     # TODO - Display the number of numbers/items received by the reader.
     #        Can not use "items_to_send", must be a value collected
     #        by the reader processes.
-    print(f'{shared_list[BUFFER_SIZE + 3]} values received')
-
+    total_values_received = sum(shared_list[index] for index in read_count_indices)
+    print(f'\n{items_to_send} values sent')
+    print(f'Total values received: {total_values_received}')
 
     smm.shutdown()
-
 
 if __name__ == '__main__':
     main()
