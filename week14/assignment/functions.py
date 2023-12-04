@@ -64,7 +64,47 @@ def depth_fs_pedigree(family_id, tree):
     # KEEP this function even if you don't implement it
     # TODO - implement Depth first retrieval
     # TODO - Printing out people and families that are retrieved from the server will help debugging
+      # Request family details
+    request = Request_thread(f'{TOP_API_URL}/family/{family_id}')
+    request.start()
+    request.join()
 
+    family_data = request.get_response()
+    if family_data:
+        family = Family(family_data)
+        tree.add_family(family)  # Add the family to the tree
+
+        # Process husband and wife
+        if family.get_husband():
+            husband_request = Request_thread(f'{TOP_API_URL}/person/{family.get_husband()}')
+            husband_request.start()
+            husband_request.join()
+            husband = Person(husband_request.get_response())
+            tree.add_person(husband)  # Add the husband to the tree
+
+        if family.get_wife():
+            wife_request = Request_thread(f'{TOP_API_URL}/person/{family.get_wife()}')
+            wife_request.start()
+            wife_request.join()
+            wife = Person(wife_request.get_response())
+            tree.add_person(wife)  # Add the wife to the tree
+
+        # Process children
+        children_threads = []
+        for child_id in family.get_children():
+            child_request = Request_thread(f'{TOP_API_URL}/person/{child_id}')
+            child_request.start()
+            children_threads.append(child_request)
+
+        for child_thread in children_threads:
+            child_thread.join()
+            child = Person(child_thread.get_response())
+            tree.add_person(child)  # Add each child to the tree
+
+            # Call depth_fs_pedigree for each child's family in a new thread
+            thread = threading.Thread(target=depth_fs_pedigree, args=(child.get_parentid(), tree))
+            thread.start()
+            thread.join() 
     pass
 
 # -----------------------------------------------------------------------------
@@ -72,7 +112,53 @@ def breadth_fs_pedigree(family_id, tree):
     # KEEP this function even if you don't implement it
     # TODO - implement breadth first retrieval
     # TODO - Printing out people and families that are retrieved from the server will help debugging
+    family_queue = queue.Queue()
+    family_queue.put(family_id)
 
+    while not family_queue.empty():
+        current_family_id = family_queue.get()
+
+        # Request family details
+        family_request = Request_thread(f'{TOP_API_URL}/family/{current_family_id}')
+        family_request.start()
+        family_request.join()
+
+        family_data = family_request.get_response()
+        if family_data:
+            family = Family(family_data)
+            tree.add_family(family)  # Add the family to the tree
+
+            # Process husband and wife using appropriate methods from the Family class
+            if family.get_husband():
+                husband_request = Request_thread(f'{TOP_API_URL}/person/{family.get_husband()}')
+                husband_request.start()
+                husband_request.join()
+                husband = Person(husband_request.get_response())
+                tree.add_person(husband)
+
+            if family.get_wife():
+                wife_request = Request_thread(f'{TOP_API_URL}/person/{family.get_wife()}')
+                wife_request.start()
+                wife_request.join()
+                wife = Person(wife_request.get_response())
+                tree.add_person(wife)
+
+            # Process children
+            children_threads = []
+            for child_id in family.get_children():
+                child_request = Request_thread(f'{TOP_API_URL}/person/{child_id}')
+                child_request.start()
+                children_threads.append(child_request)
+
+            for child_thread in children_threads:
+                child_thread.join()
+                child = Person(child_thread.get_response())
+                tree.add_person(child)
+
+                # Add child's family ID to the queue for further processing
+                child_family_id = child.get_parentid()  # Adjust based on the Person class's method
+                if child_family_id and child_family_id != current_family_id:
+                    family_queue.put(child_family_id)
     pass
 
 # -----------------------------------------------------------------------------
@@ -81,5 +167,59 @@ def breadth_fs_pedigree_limit5(family_id, tree):
     # TODO - implement breadth first retrieval
     #      - Limit number of concurrent connections to the FS server to 5
     # TODO - Printing out people and families that are retrieved from the server will help debugging
+    family_queue = queue.Queue()
+    family_queue.put(family_id)
 
+    # Semaphore to limit the number of concurrent threads to 5
+    semaphore = threading.Semaphore(5)
+
+    while not family_queue.empty():
+        current_family_id = family_queue.get()
+
+        def process_family(fid):
+            with semaphore:
+                family_request = Request_thread(f'{TOP_API_URL}/family/{fid}')
+                family_request.start()
+                family_request.join()
+
+                family_data = family_request.get_response()
+                if family_data:
+                    family = Family(family_data)
+                    tree.add_family(family)  # Add the family to the tree
+
+                    # Process husband and wife using appropriate methods from the Family class
+                    if family.get_husband():
+                        husband_request = Request_thread(f'{TOP_API_URL}/person/{family.get_husband()}')
+                        husband_request.start()
+                        husband_request.join()
+                        husband = Person(husband_request.get_response())
+                        tree.add_person(husband)
+
+                    if family.get_wife():
+                        wife_request = Request_thread(f'{TOP_API_URL}/person/{family.get_wife()}')
+                        wife_request.start()
+                        wife_request.join()
+                        wife = Person(wife_request.get_response())
+                        tree.add_person(wife)
+
+                    # Process children
+                    children_threads = []
+                    for child_id in family.get_children():
+                        child_request = Request_thread(f'{TOP_API_URL}/person/{child_id}')
+                        child_request.start()
+                        children_threads.append(child_request)
+
+                    for child_thread in children_threads:
+                        child_thread.join()
+                        child = Person(child_thread.get_response())
+                        tree.add_person(child)
+
+                        # Add child's family ID to the queue for further processing
+                        child_family_id = child.get_parentid()  # Adjust based on the Person class's method
+                        if child_family_id and child_family_id != fid:
+                            family_queue.put(child_family_id)
+
+        thread = threading.Thread(target=process_family, args=(current_family_id,))
+        thread.start()
+        thread.join()
     pass

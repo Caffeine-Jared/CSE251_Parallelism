@@ -1,0 +1,93 @@
+01:39:45| 
+
+01:39:45| #############################################
+01:39:45| Depth First Search: 6 generations
+01:39:45| #############################################
+01:39:47| 2.02705530
+01:39:48| 
+
+
+01:39:48| ************* TREE DISPLAY *************
+01:39:48| Family id: 5008524753
+01:39:48|   Husband: Wyatt, 28-7-1898
+01:39:48|   Wife: Ella, 24-2-1866
+01:39:48|   Husband Parents: None
+01:39:48|   Wife Parents: None
+01:39:48|   Children: Alexander, Riley, Natalie, Christopher
+01:39:48| 
+01:39:48| Number of people                    : 6
+01:39:48| Number of families                  : 1
+01:39:48| Max generations                     : 1
+01:39:48| People connected to starting family : 6
+01:39:48| 
+01:39:48| total_time                    : 2.02706
+01:39:48| Generations                   : 6
+01:39:48| People % Families / second    : 3.45329
+01:39:48| 
+01:39:48| STATS        Retrieved | Server details
+01:39:48| People  :            6 |            451
+01:39:48| Families:            1 |             63
+01:39:48| API Calls            : 13
+01:39:48| Max number of threads: 4
+01:39:48| 
+
+01:39:48| #############################################
+01:39:48| Breadth First Search: 6 generations
+01:39:48| #############################################
+01:39:49| 1.01546170
+01:39:49| 
+
+
+01:39:49| ************* TREE DISPLAY *************
+01:39:49| Family id: 5008524753
+01:39:49|   Husband: Lucas, 10-4-1789
+01:39:49|   Wife: Violet, 29-9-1817
+01:39:49|   Husband Parents: None
+01:39:49|   Wife Parents: None
+01:39:49|   Children: Benjamin, Leah, Nora, Logan, Eleanor, Olivia
+01:39:49| 
+01:39:49| Number of people                    : 8
+01:39:49| Number of families                  : 1
+01:39:49| Max generations                     : 1
+01:39:49| People connected to starting family : 8
+01:39:49| 
+01:39:49| total_time                    : 1.01546
+01:39:49| Generations                   : 6
+01:39:49| People % Families / second    : 8.86296
+01:39:49| 
+01:39:49| STATS        Retrieved | Server details
+01:39:49| People  :            8 |            432
+01:39:49| Families:            1 |             63
+01:39:49| API Calls            : 11
+01:39:49| Max number of threads: 6
+01:39:49| 
+
+01:39:49| #############################################
+01:39:49| Breadth First Search limit 5: 6 generations
+01:39:49| #############################################
+01:39:50| 1.01496790
+01:39:51| 
+
+
+01:39:51| ************* TREE DISPLAY *************
+01:39:51| Family id: 5008524753
+01:39:51|   Husband: Asher, 14-5-1954
+01:39:51|   Wife: Audrey, 1-12-1826
+01:39:51|   Husband Parents: None
+01:39:51|   Wife Parents: None
+01:39:51|   Children: Sebastian, Lily, Alexander, Elizabeth, Amelia, Dylan, Avery
+01:39:51| 
+01:39:51| Number of people                    : 9
+01:39:51| Number of families                  : 1
+01:39:51| Max generations                     : 1
+01:39:51| People connected to starting family : 9
+01:39:51| 
+01:39:51| total_time                    : 1.01497
+01:39:51| Generations                   : 6
+01:39:51| People % Families / second    : 9.85253
+01:39:51| 
+01:39:51| STATS        Retrieved | Server details
+01:39:51| People  :            9 |            414
+01:39:51| Families:            1 |             63
+01:39:51| API Calls            : 12
+01:39:51| Max number of threads: 7
